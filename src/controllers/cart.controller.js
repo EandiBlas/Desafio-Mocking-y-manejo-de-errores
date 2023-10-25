@@ -1,5 +1,7 @@
 import CartService from "../services/cart.services.js";
 import usersManager from "../persistencia/dao/managers/userManagerMongo.js";
+import CustomError from "../errors/CustomError.js";
+import {errorMessages} from "../errors/error.enum.js";
 
 class CartsController {
     constructor() {
@@ -18,10 +20,10 @@ class CartsController {
             message: `The product with ID: ${pid} was added correctly`,
             cart: updatedCart,
           });
-        } catch (error) {
-          console.log(error);
-          res.status(500).send({ message: error.message });
-        }
+        } catch(error){
+          const customError = CustomError.createError(errorMessages.ADD_PRODUCT_ERROR);
+          return res.status(404).json({ error: customError.message });
+      }
     }
 
 
@@ -44,8 +46,9 @@ class CartsController {
             const cart = await this.service.getCart(req.params.cid);
             res.status(200).json(cart);
         } catch (error) {
-            res.status(500).json(error);
-        }
+          const customError = CustomError.createError(errorMessages.CART_NOT_FOUND);
+          return res.status(404).json({ error: customError.message });
+      }
     }
 
     getAllCarts = async (req, res) => {
@@ -99,9 +102,8 @@ class CartsController {
             res.status(200).send({ status: 'success', message: `Deleted product with ID: ${pid}`, cart: updatedCart });
           }
         } catch (error) {
-          // Maneja cualquier otro error que pueda ocurrir
-          console.log(error);
-          res.status(500).send({ status: 'error', message: error.message });
+          const customError = CustomError.createError(errorMessages.REMOVE_FROM_CART_ERROR);
+          return res.status(404).json({ error: customError.message });
         }
       }
       
@@ -117,8 +119,8 @@ class CartsController {
             cart: updatedCart,
           });
         } catch (error) {
-          console.log(error);
-          res.status(500).send({ message: error.message });
+          const customError = CustomError.createError(errorMessages.EMPTY_CART);
+          return res.status(404).json({ error: customError.message });
         }
     }
 

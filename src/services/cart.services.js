@@ -1,7 +1,9 @@
-import {ticketModel} from "../persistencia/dao/models/ticket.model.js";
+import { ticketModel } from "../persistencia/dao/models/ticket.model.js";
 import CartManager from "../persistencia/dao/managers/cartManagerMongo.js";
 import ProductManager from "../persistencia/dao/managers/productManagerMongo.js";
 import UsersManager from "../persistencia/dao/managers/userManagerMongo.js";
+import CustomError from "../errors/CustomError.js";
+import { errorMessages } from "../errors/error.enum.js";
 
 class CartService {
 
@@ -33,8 +35,8 @@ class CartService {
       throw error;
     }
   };
-  
-  createCart = async (products,vemail) => {
+
+  createCart = async (products, vemail) => {
     let cartData = {};
     const validProducts = [];
     for (let i = 0; i < products.length; i++) {
@@ -52,6 +54,10 @@ class CartService {
 
   getCart = async (id) => {
     const cart = await this.cart.getCartById(id);
+    if (!cart) {
+      const errorMessage = errorMessages.CART_NOT_FOUND;
+      throw CustomError.createError(errorMessage);
+    }
     return cart;
   }
 
@@ -106,7 +112,7 @@ class CartService {
   deleteProductInCart = async (cid, pid) => {
     try {
       const cart = await this.cart.getCartById(cid);
-      const productIndex = cart.products.findIndex((product) => product.product._id.toString() == pid );
+      const productIndex = cart.products.findIndex((product) => product.product._id.toString() == pid);
       if (productIndex === -1) {
         throw new Error(`Product with ID: ${pid} not found in cart`);
       }
@@ -152,37 +158,37 @@ class CartService {
       if (!cart) {
         throw new Error('Carrito no encontrado');
       }
-  
+
       const productsToUpdate = [];
       const productsToDelete = [];
-  
+
       const productsToBuy = []
 
       for (const product of cart.products) {
         console.log(product)
         const productData = await this.product.getProductById(product.product._id);
-  
+
         let quantityProduct = true;
 
         let productExist = true;
 
         if (!productData) {
-           productExist = false;
+          productExist = false;
         }
-  
+
         if (product.quantity >= productData.stock) {
           quantityProduct = false;
         }
 
-        if(productExist & quantityProduct){
+        if (productExist & quantityProduct) {
           productData.stock -= product.quantity;
           productsToUpdate.push(productData);
           productsToDelete.push(product);
           productsToBuy.push(product)
         }
-        
+
       }
-  
+
       for (const productData of productsToUpdate) {
         await this.product.updateProduct(productData._id, productData);
       }
@@ -201,19 +207,19 @@ class CartService {
         amount: result,
         purchaser: cart.purchaser,
       });
-  
+
       await ticket.save();
-  
+
       cart.products = cart.products.filter((product) => !productsToDelete.includes(product));
-  
+
       await this.cart.updateCart(cid, cart.products);
-  
+
       return { message: 'Compra exitosa', ticket: ticket };
     } catch (error) {
       throw error;
     }
   };
-  
+
 
 }
 

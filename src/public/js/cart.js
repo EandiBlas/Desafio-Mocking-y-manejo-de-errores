@@ -8,7 +8,7 @@ function updateCartList(products) {
     cartContent = '<p>No hay productos en el carrito</p>';
   }else{
   products.forEach((product) => {
-    console.log(product);
+    //console.log(product);
     cartContent +=`
                   <div class="cart-item">
                       <img src="${product.product.thumbnail}" class="cart-item-image">
